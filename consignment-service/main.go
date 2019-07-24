@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	pb "github.com/ahmadkarlam/shippy/consignment-service/proto/consignment"
+	pb "github.com/ahmadkarlam/shipy/consignment-service/proto/consignment"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
@@ -15,15 +15,15 @@ const (
 )
 
 type repository interface {
-	Create(*consignment.Consignment) (*consignment.Consignment, error)
+	Create(*pb.Consignment) (*pb.Consignment, error)
 }
 
 type Repository struct {
 	mu sync.RWMutex
-	consignments []*consignment.Consignment
+	consignments []*pb.Consignment
 }
 
-func (repo *Repository) Create(consignment *consignment.Consignment) (*consignment.Consignment, error) {
+func (repo *Repository) Create(consignment *pb.Consignment) (*pb.Consignment, error) {
 	repo.mu.Lock()
 	updated := append(repo.consignments, consignment)
 	repo.consignments = updated
@@ -35,14 +35,14 @@ type service struct {
 	repo repository
 }
 
-func (s *service) CreateConsignment(ctx context.Context, req *consignment.Consignment) (*consignment.Response, error) {
+func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment) (*pb.Response, error) {
 	consignment, err := s.repo.Create(req)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &consignment.Response{Created: true, Consignment: consignment}, nil
+	return &pb.Response{Created: true, Consignment: consignment}, nil
 }
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	consignment.RegisterShippingServiceServer(s, &service{repo})
+	pb.RegisterShippingServiceServer(s, &service{repo})
 
 	reflection.Register(s)
 
